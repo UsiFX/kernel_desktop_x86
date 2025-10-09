@@ -1642,8 +1642,13 @@ sd_init(struct sched_domain_topology_level *tl,
 	*sd = (struct sched_domain){
 		.min_interval		= sd_weight,
 		.max_interval		= 2*sd_weight,
+#ifdef CONFIG_SCHED_CASH
+		.busy_factor		= 32,
+		.imbalance_pct		= 135,
+#else
 		.busy_factor		= 16,
 		.imbalance_pct		= 117,
+#endif
 
 		.cache_nice_tries	= 0,
 
@@ -1686,10 +1691,18 @@ sd_init(struct sched_domain_topology_level *tl,
 		sd->child->flags &= ~SD_PREFER_SIBLING;
 
 	if (sd->flags & SD_SHARE_CPUCAPACITY) {
+#ifdef CONFIG_SCHED_CASH
+		sd->imbalance_pct = 200;
+#else
 		sd->imbalance_pct = 110;
+#endif
 
 	} else if (sd->flags & SD_SHARE_LLC) {
+#ifdef CONFIG_SCHED_CASH
+		sd->imbalance_pct = 125;
+#else
 		sd->imbalance_pct = 117;
+#endif
 		sd->cache_nice_tries = 1;
 
 #ifdef CONFIG_NUMA
@@ -2821,7 +2834,15 @@ match3:
 void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
 			     struct sched_domain_attr *dattr_new)
 {
+#ifdef CONFIG_SCHED_CASH
+	WRITE_ONCE(cash_up, false);
+	WRITE_ONCE(cash_sg, false);
+	smp_mb();
+#endif
 	sched_domains_mutex_lock();
 	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
+#ifdef CONFIG_SCHED_CASH
+	sched_cash_init();
+#endif
 	sched_domains_mutex_unlock();
 }
