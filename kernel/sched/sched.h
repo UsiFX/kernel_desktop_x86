@@ -2092,6 +2092,10 @@ struct sched_group {
 	struct sched_group	*next;			/* Must be a circular list */
 	atomic_t		ref;
 
+#ifdef CONFIG_SCHED_CASH
+	long			factor;
+#endif
+
 	unsigned int		group_weight;
 	unsigned int		cores;
 	struct sched_group_capacity *sgc;
@@ -3905,5 +3909,11 @@ void sched_enq_and_set_task(struct sched_enq_and_set_ctx *ctx);
 #endif /* CONFIG_SCHED_CLASS_EXT */
 
 #include "ext.h"
+
+#ifdef CONFIG_SCHED_CASH
+extern bool cash_up __read_mostly;
+extern bool cash_sg __read_mostly;
+void sched_cash_init(void);
+#endif
 
 #endif /* _KERNEL_SCHED_SCHED_H */

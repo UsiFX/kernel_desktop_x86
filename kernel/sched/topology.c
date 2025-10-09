@@ -1643,7 +1643,11 @@ sd_init(struct sched_domain_topology_level *tl,
 		.min_interval		= sd_weight,
 		.max_interval		= 2*sd_weight,
 		.busy_factor		= 16,
+#ifdef CONFIG_SCHED_CASH
+		.imbalance_pct		= 125,
+#else
 		.imbalance_pct		= 117,
+#endif
 
 		.cache_nice_tries	= 0,
 
@@ -2821,7 +2825,14 @@ match3:
 void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
 			     struct sched_domain_attr *dattr_new)
 {
+#ifdef CONFIG_SCHED_CASH
+	WRITE_ONCE(cash_up, false);
+	WRITE_ONCE(cash_sg, false);
+#endif
 	sched_domains_mutex_lock();
 	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
+#ifdef CONFIG_SCHED_CASH
+	sched_cash_init();
+#endif
 	sched_domains_mutex_unlock();
 }
