@@ -63,6 +63,11 @@ static int try_to_freeze_tasks(bool user_only)
 			todo += wq_busy;
 		}
 
+
+                if (todo) {
+                        rcu_barrier();
+                }
+
 		if (!todo || time_after(jiffies, end_time))
 			break;
 
